@@ -5,13 +5,18 @@
     </ion-title>
   </ion-toolbar>
 </ion-header>
+<ion-content>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-button aria-expanded="block" (click)="chamarProximaSenha()">Chamar Próxima Senha</ion-button>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+ <ion-list *ngIf="senhasService.senhaChamada">
+  <ion-item>
+    <p>Senha Chamada: {{ senhasService.senhaChamada.numero }}</p>
+      <p>Data e Hora de Atendimento: {{ senhasService.senhaChamada.dataHoraAtendimento | date:'medium' }}</p>
+  </ion-item>
+ </ion-list> 
+  
+
 </ion-content>
+
+

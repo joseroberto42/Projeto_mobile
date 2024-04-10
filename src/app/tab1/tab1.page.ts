@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-
+import { SenhasService } from '../services/senhas.service';
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -7,6 +7,20 @@ import { Component } from '@angular/core';
 })
 export class Tab1Page {
 
-  constructor() {}
+  constructor( public senhasService: SenhasService) {
 
+
+  }
+  inputNovaSenha: string = '';
+  criarSenhaPrioritaria(): void {
+    this.senhasService.criarSenhaPrioritaria();
+  }
+
+  criarSenhaGeral(): void {
+    this.senhasService.criarSenhaGeral();
+  }
+
+  criarSenhaExame(): void {
+    this.senhasService.criarSenhaExame();
+  }
 }
