@@ -32,11 +32,34 @@
           Senhas Exame: {{senhasService.senhasExame}}
         </ion-item>
         <ion-item *ngFor="let senha of senhasService.senhasEmitidas">
-  Senha emitida: {{ senha.numero }} - {{ senha.dataHora | date: 'dd/MM/yyyy HH:mm:ss' }}
-</ion-item>
+          Senha emitida: {{ senha.numero }} - {{ senha.dataHora | date: 'dd/MM/yyyy HH:mm:ss' }}
+        </ion-item>
+        
 
       
       </ion-list>
     </ion-card-content>
   </ion-card>
 </ion-content>
+<ion-content>
+  <ion-button (click)="gerarRelatorio()">Gerar Relatório</ion-button>
+
+  <ion-card *ngIf="relatorio">
+
+
+  <ion-card-content>
+    <ion-list>
+      <ion-item *ngFor="let senhaAtendida of relatorio.senhas">
+        <ion-label>
+          <h2>Senha: {{ senhaAtendida.senha.numero }}</h2>
+          <p>Data e hora de geração: {{ senhaAtendida.senha.dataHora | date: 'dd/MM/yyyy HH:mm' }}</p>
+          <p>Hora de Atendimento: {{ senhaAtendida.senha.dataHoraAtendimento | date: 'medium' }}</p>
+          <p>Tempo medio de atendimento: {{ senhaAtendida.tempoDecorrido }} minutos</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-card-content>
+</ion-card>
+</ion-content>
+
+

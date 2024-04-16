@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
+interface SenhaAtendida {
+  senha: Senha;
+  tempoDecorrido: number; 
+}
 
+
+export interface RelatorioAtendimento {
+  senhas: SenhaAtendida[];
+  temposMedios: { [tipo: string]: number }; 
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -11,66 +20,83 @@ export class SenhasService {
   public senhasExame: number = 0;
   public senhasTotal: number = 0;
 
-  // Array para armazenar as senhas emitidas
+ 
   senhasEmitidas: Senha[] = [];
   senhaChamada: Senha | null = null;
-  // Métodos para incrementar os contadores de senhas
+  senhasChamadas: Senha[] = [];
+  senhasAtendidas: SenhaAtendida[] = []; 
+  
   somaGeral() { this.senhasGeral++; this.senhasTotal++; };
   somaPrior() { this.senhasPrior++; this.senhasTotal++; };
   somaExame() { this.senhasExame++; this.senhasTotal++; };
 
-  // Método para chamar uma senha
+
   chamarSenha() {
-    // Verifica se há senhas prioritárias na lista
-    const senhaPrioritaria = this.senhasEmitidas.find(senha => senha.numero.startsWith('PR'));
+  
+    const senhaPrioritaria = this.senhasEmitidas.find(senha => {
+        const substr = senha.numero.substring(7, 9);
+        return substr === 'PR';
+    });
     if (senhaPrioritaria) {
-      this.chamarEAtualizarSenha(senhaPrioritaria);
-      return;
+        console.log('Senha prioritária encontrada:', senhaPrioritaria);
+        this.chamarEAtualizarSenha(senhaPrioritaria);
+        return;
     }
 
-    // Senão, verifica se há senhas de exame na lista
-    const senhaExame = this.senhasEmitidas.find(senha => senha.numero.startsWith('EX'));
+    const senhaExame = this.senhasEmitidas.find(senha => {
+        const substr = senha.numero.substring(7, 9);
+        return substr === 'EX';
+    });
     if (senhaExame) {
-      this.chamarEAtualizarSenha(senhaExame);
-      return;
+        console.log('Senha de exame encontrada:', senhaExame);
+        this.chamarEAtualizarSenha(senhaExame);
+        return;
     }
 
-    // Se não houver senhas prioritárias ou de exame, chama a próxima senha geral
-    const proximaSenhaGeral = this.senhasEmitidas.find(senha => senha.numero.startsWith('GE'));
+    //
+    const proximaSenhaGeral = this.senhasEmitidas.find(senha => {
+        const substr = senha.numero.substring(7, 9); 
+        return substr === 'GE';
+    });
     if (proximaSenhaGeral) {
-      this.chamarEAtualizarSenha(proximaSenhaGeral);
-      return;
+        console.log('Próxima senha geral encontrada:', proximaSenhaGeral);
+        this.chamarEAtualizarSenha(proximaSenhaGeral);
+        return;
     }
 
     console.log('Não há mais senhas para chamar.');
   }
 
-  // Método para chamar e atualizar a senha chamada
   private chamarEAtualizarSenha(senha: Senha) {
     console.log('Chamando senha:', senha);
-    senha.dataHoraAtendimento = new Date(); // Define a hora de atendimento
-    this.senhaChamada = senha; // Atualiza a senha chamada
+    const tempoInicio = senha.dataHora; 
+    const tempoFim = new Date(); 
+    senha.dataHoraAtendimento = tempoFim;
+    this.senhaChamada = senha;
+    this.senhasChamadas.unshift(senha);
+
+    const tempoDecorrido = (tempoFim.getTime() - tempoInicio.getTime()) / 60000; 
+    this.senhasAtendidas.push({ senha, tempoDecorrido });
+
     const index = this.senhasEmitidas.indexOf(senha);
     if (index !== -1) {
       this.senhasEmitidas.splice(index, 1);
     }
   }
 
-  // Método para criar uma senha prioritária
+  
   criarSenhaPrioritaria(): void {
     const senhaPrioritaria: Senha = this.criarSenha('PR');
     this.senhasEmitidas.push(senhaPrioritaria);
     console.log(senhaPrioritaria);
+    console.log(this.senhasEmitidas);
   }
-
-  // Método para criar uma senha geral
   criarSenhaGeral(): void {
     const senhaGeral: Senha = this.criarSenha('GE');
     this.senhasEmitidas.push(senhaGeral);
     console.log(senhaGeral);
   }
 
-  // Método para criar uma senha de exame
   criarSenhaExame(): void {
     const senhaExame: Senha = this.criarSenha('EX');
     this.senhasEmitidas.push(senhaExame);
@@ -102,7 +128,7 @@ export class SenhasService {
       sequencia = this.sequenciaExame;
       this.senhasExame++; this.senhasTotal++; 
     } else {
-      sequencia = 1; // Se não for nenhum tipo específico, a sequência é 1
+      sequencia = 1; 
     }
   
     const sequenciaFormatada = ('00' + sequencia).slice(-2);
@@ -110,11 +136,33 @@ export class SenhasService {
   
     return { numero: senha, dataHora: dataHora };
   }
+  gerarRelatorio(): RelatorioAtendimento {
+    const temposMedios: { [tipo: string]: number } = {};
+    const senhas: SenhaAtendida[] = [];
+    this.senhasAtendidas.forEach(senhaAtendida => {
+      const tipo = senhaAtendida.senha.numero.substring(7, 9);
+      if (!temposMedios[tipo]) {
+        temposMedios[tipo] = 0;
+      }
+      temposMedios[tipo] += senhaAtendida.tempoDecorrido;
+      senhas.push(senhaAtendida);
+    });
+
+  
+    for (const tipo in temposMedios) {
+      if (temposMedios.hasOwnProperty(tipo)) {
+        const quantidade = senhas.filter(s => s.senha.numero.substring(7, 9) === tipo).length;
+        temposMedios[tipo] /= quantidade;
+      }
+    }
+    console.log(senhas,temposMedios)
+    return { senhas, temposMedios };
+  }
 }
 
-// Interface para representar uma senha
-interface Senha {
+
+export interface Senha {
   numero: string;
   dataHora: Date;
-  dataHoraAtendimento?: Date; // Propriedade opcional para a hora de atendimento
+  dataHoraAtendimento?: Date; 
 }
